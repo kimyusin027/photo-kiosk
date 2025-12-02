@@ -14,14 +14,37 @@
       color: #fff;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
+      justify-content: flex-start;
       min-height: 100vh;
     }
+
+    /* 상단 바 */
+    .top-bar {
+      width: 100%;
+      background: #0f172a;
+      color: #f9fafb;
+      padding: 12px 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 20px;
+      letter-spacing: 0.12em;
+    }
+
+    .page {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      padding: 16px 16px 32px;
+    }
+
     .container {
       max-width: 1200px;
       width: 100%;
-      padding: 20px;
       display: grid;
       grid-template-columns: 2fr 1fr;
       gap: 20px;
@@ -42,7 +65,7 @@
       color: #aaa;
     }
 
-    /* 왼쪽: 실시간 미리보기 + 컨트롤 */
+    /* 왼쪽: 레이아웃 선택 + 실시간 미리보기 + 컨트롤 */
     .preview-area {
       display: flex;
       flex-direction: column;
@@ -116,6 +139,70 @@
       color: #888;
       text-align: center;
       min-height: 18px;
+    }
+
+    /* 레이아웃 선택 영역 */
+    .layout-picker {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    .layout-title {
+      font-size: 13px;
+      color: #e5e7eb;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+    .layout-options {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .layout-option {
+      background: #111827;
+      border-radius: 12px;
+      padding: 8px 10px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      min-width: 90px;
+      transition: border-color 0.1s, box-shadow 0.1s, transform 0.1s, background 0.1s;
+    }
+    .layout-option.selected {
+      border-color: #fbbf24;
+      background: #1f2937;
+      box-shadow: 0 0 12px rgba(0,0,0,0.7);
+      transform: translateY(-1px);
+    }
+    .layout-label {
+      font-size: 11px;
+      color: #e5e7eb;
+    }
+    .layout-preview {
+      width: 56px;
+      height: 56px;
+      background: #020617;
+      border-radius: 10px;
+      padding: 4px;
+      display: grid;
+      gap: 3px;
+    }
+    .layout-preview div {
+      background: #f9fafb;
+      border-radius: 4px;
+    }
+    .layout-vertical {
+      grid-template-rows: repeat(4, 1fr);
+    }
+    .layout-horizontal {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .layout-square {
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
     }
 
     /* 오른쪽: 4컷 썸네일 + 최종 결과 */
@@ -205,59 +292,92 @@
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- 왼쪽: 실시간 프리뷰 + 촬영 컨트롤 -->
-    <div class="panel">
-      <h1>포토이즘 4컷</h1>
-      <p class="subtitle">버튼 한 번으로 3초 간격 4컷 자동 촬영 · 흑백 필터 적용 후 PNG 다운로드</p>
-      <div class="preview-area">
-        <video id="video" autoplay playsinline muted></video>
-        <div id="countdown" class="countdown"></div>
+  <!-- 상단 바 -->
+  <div class="top-bar">
+    포토이즘
+  </div>
 
-        <div class="controls">
-          <button id="startSequenceBtn">🎬 4컷 촬영 시작</button>
-          <button id="resetBtn" class="btn-secondary">🧹 초기화</button>
+  <div class="page">
+    <div class="container">
+      <!-- 왼쪽: 레이아웃 선택 + 실시간 프리뷰 + 촬영 컨트롤 -->
+      <div class="panel">
+        <h1>포토이즘 4컷</h1>
+        <p class="subtitle">레이아웃을 선택하고 3초 간격으로 4컷 자동 촬영 · 흑백 필터 적용 후 PNG 다운로드</p>
+
+        <!-- 레이아웃 선택 -->
+        <div class="layout-picker">
+          <div class="layout-title">레이아웃 선택</div>
+          <div class="layout-options">
+            <div class="layout-option selected" data-layout="vertical">
+              <div class="layout-preview layout-vertical">
+                <div></div><div></div><div></div><div></div>
+              </div>
+              <div class="layout-label">세로 4컷</div>
+            </div>
+            <div class="layout-option" data-layout="horizontal">
+              <div class="layout-preview layout-horizontal">
+                <div></div><div></div><div></div><div></div>
+              </div>
+              <div class="layout-label">가로 4컷</div>
+            </div>
+            <div class="layout-option" data-layout="square">
+              <div class="layout-preview layout-square">
+                <div></div><div></div><div></div><div></div>
+              </div>
+              <div class="layout-label">정사각형 2×2</div>
+            </div>
+          </div>
         </div>
-        <div class="checkbox-row">
-          <input type="checkbox" id="grayscaleCheckbox" />
-          <label for="grayscaleCheckbox">흑백 필터 적용</label>
+
+        <div class="preview-area">
+          <video id="video" autoplay playsinline muted></video>
+          <div id="countdown" class="countdown"></div>
+
+          <div class="controls">
+            <button id="startSequenceBtn">🎬 4컷 촬영 시작</button>
+            <button id="resetBtn" class="btn-secondary">🧹 초기화</button>
+          </div>
+          <div class="checkbox-row">
+            <input type="checkbox" id="grayscaleCheckbox" />
+            <label for="grayscaleCheckbox">흑백 필터 적용</label>
+          </div>
+          <div id="status" class="status"></div>
         </div>
-        <div id="status" class="status"></div>
       </div>
-    </div>
 
-    <!-- 오른쪽: 4컷 썸네일 & 최종 결과 -->
-    <div class="panel side">
-      <div>
-        <h1>촬영 중인 4컷</h1>
-        <p class="subtitle">각 칸에 순서대로 사진이 채워집니다.</p>
-        <div class="thumbs">
-          <div class="thumb-slot">
-            <div class="thumb-label">1컷</div>
-            <canvas id="thumb1" class="thumb-canvas"></canvas>
-          </div>
-          <div class="thumb-slot">
-            <div class="thumb-label">2컷</div>
-            <canvas id="thumb2" class="thumb-canvas"></canvas>
-          </div>
-          <div class="thumb-slot">
-            <div class="thumb-label">3컷</div>
-            <canvas id="thumb3" class="thumb-canvas"></canvas>
-          </div>
-          <div class="thumb-slot">
-            <div class="thumb-label">4컷</div>
-            <canvas id="thumb4" class="thumb-canvas"></canvas>
+      <!-- 오른쪽: 4컷 썸네일 & 최종 결과 -->
+      <div class="panel side">
+        <div>
+          <h1>촬영 중인 4컷</h1>
+          <p class="subtitle">각 칸에 순서대로 사진이 채워집니다.</p>
+          <div class="thumbs">
+            <div class="thumb-slot">
+              <div class="thumb-label">1컷</div>
+              <canvas id="thumb1" class="thumb-canvas"></canvas>
+            </div>
+            <div class="thumb-slot">
+              <div class="thumb-label">2컷</div>
+              <canvas id="thumb2" class="thumb-canvas"></canvas>
+            </div>
+            <div class="thumb-slot">
+              <div class="thumb-label">3컷</div>
+              <canvas id="thumb3" class="thumb-canvas"></canvas>
+            </div>
+            <div class="thumb-slot">
+              <div class="thumb-label">4컷</div>
+              <canvas id="thumb4" class="thumb-canvas"></canvas>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="final-preview-wrapper">
-        <div class="final-preview-label">최종 4컷 결과</div>
-        <img id="finalImage" class="final-preview" alt="4컷 결과 미리보기 (촬영 후 표시됨)" />
-        <div class="download-row">
-          <a id="downloadLink" class="download-link" href="#" download="photo4cut.png" aria-disabled="true">
-            ⬇ 4컷 PNG 다운로드
-          </a>
+        <div class="final-preview-wrapper">
+          <div class="final-preview-label">최종 4컷 결과</div>
+          <img id="finalImage" class="final-preview" alt="4컷 결과 미리보기 (촬영 후 표시됨)" />
+          <div class="download-row">
+            <a id="downloadLink" class="download-link" href="#" download="photo4cut.png" aria-disabled="true">
+              ⬇ 4컷 PNG 다운로드
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -285,6 +405,9 @@
     const downloadLink = document.getElementById("downloadLink");
     const compositeCanvas = document.getElementById("hiddenCompositeCanvas");
 
+    const layoutOptionElements = document.querySelectorAll(".layout-option");
+    let currentLayout = "vertical"; // vertical | horizontal | square
+
     let mediaStream = null;
     let capturedCount = 0;
     let isShooting = false;
@@ -299,7 +422,7 @@
       try {
         mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
         video.srcObject = mediaStream;
-        statusEl.textContent = "카메라 연결 완료. 4컷 촬영 시작 버튼을 눌러주세요.";
+        statusEl.textContent = "카메라 연결 완료. 레이아웃 선택 후 4컷 촬영 시작 버튼을 눌러주세요.";
       } catch (err) {
         console.error(err);
         statusEl.textContent = "카메라 접근 실패: " + err.message;
@@ -344,34 +467,79 @@
         return;
       }
 
-      // 최종 4컷 비율 설정
-      const frameWidth = 800;          // 최종 폭(px)
-      const scale = frameWidth / srcW; // 원본 비율에 맞게 축소/확대
-      const photoHeight = srcH * scale;
-      const margin = 30;               // 테두리/간격
-      const frameHeight = margin + (photoHeight * 4) + (margin * 5);
+      const layout = currentLayout;
+      const outer = 40; // 바깥 여백
+      const inner = 20; // 사진 사이 여백
+
+      let frameWidth, frameHeight, photoW, photoH, rows, cols;
+
+      if (layout === "horizontal") {
+        // 가로 4컷
+        cols = 4;
+        rows = 1;
+        frameWidth = 1200;
+        const availW = frameWidth - outer * 2 - inner * (cols - 1);
+        photoW = availW / cols;
+        const scale = photoW / srcW;
+        photoH = srcH * scale;
+        frameHeight = outer * 2 + photoH;
+      } else if (layout === "square") {
+        // 2x2 정사각형
+        cols = 2;
+        rows = 2;
+        frameWidth = 800;
+        const availW = frameWidth - outer * 2 - inner * (cols - 1);
+        photoW = availW / cols;
+        const scale = photoW / srcW;
+        photoH = srcH * scale;
+        frameHeight = outer * 2 + rows * photoH + inner * (rows - 1);
+      } else {
+        // 기본: 세로 4컷
+        cols = 1;
+        rows = 4;
+        frameWidth = 800;
+        const availW = frameWidth - outer * 2;
+        photoW = availW;
+        const scale = photoW / srcW;
+        photoH = srcH * scale;
+        frameHeight = outer * 2 + rows * photoH + inner * (rows - 1);
+      }
 
       compositeCanvas.width = frameWidth;
       compositeCanvas.height = frameHeight;
 
       const ctx = compositeCanvas.getContext("2d");
 
-      // 배경 (포토이즘 느낌 흰 바탕 + 살짝 핑크빛)
+      // 배경 (포토이즘 느낌 그라디언트)
       const gradient = ctx.createLinearGradient(0, 0, 0, frameHeight);
       gradient.addColorStop(0, "#ffe4f0");
       gradient.addColorStop(1, "#ffffff");
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, frameWidth, frameHeight);
 
-      // 4장의 사진을 위에서 아래로 배치
+      // 4장의 사진을 레이아웃에 맞게 배치
       for (let i = 0; i < 4; i++) {
-        const y = margin + (photoHeight + margin) * i + margin;
+        let row, col;
+        if (layout === "horizontal") {
+          row = 0;
+          col = i;
+        } else if (layout === "square") {
+          row = Math.floor(i / 2);
+          col = i % 2;
+        } else {
+          // vertical
+          row = i;
+          col = 0;
+        }
+
+        const x = outer + col * (photoW + inner);
+        const y = outer + row * (photoH + inner);
+
         ctx.save();
         ctx.beginPath();
         const radius = 24;
-        const x = margin;
-        const w = frameWidth - margin * 2;
-        const h = photoHeight;
+        const w = photoW;
+        const h = photoH;
 
         // 둥근 모서리 클리핑
         ctx.moveTo(x + radius, y);
@@ -409,7 +577,7 @@
       downloadLink.href = dataUrl;
       downloadLink.setAttribute("aria-disabled", "false");
 
-      statusEl.textContent = "4컷 합성이 완료되었습니다. PNG 다운로드 버튼을 눌러 저장하세요.";
+      statusEl.textContent = `4컷 합성이 완료되었습니다. (${layout === "vertical" ? "세로 4컷" : layout === "horizontal" ? "가로 4컷" : "정사각형 2×2"}) PNG 다운로드 버튼을 눌러 저장하세요.`;
     }
 
     // --- 3→2→1 카운트다운 + 촬영 시퀀스 ---
@@ -454,7 +622,7 @@
       capturedCount = 0;
       isShooting = false;
       countdownEl.textContent = "";
-      statusEl.textContent = "초기화되었습니다. 다시 4컷 촬영을 시작할 수 있습니다.";
+      statusEl.textContent = "초기화되었습니다. 레이아웃을 선택하고 다시 4컷 촬영을 시작할 수 있습니다.";
       thumbCanvases.forEach((c) => {
         const ctx = c.getContext("2d");
         ctx.clearRect(0, 0, c.width, c.height);
@@ -463,6 +631,20 @@
       downloadLink.href = "#";
       downloadLink.setAttribute("aria-disabled", "true");
     }
+
+    // --- 레이아웃 선택 핸들러 ---
+    layoutOptionElements.forEach((el) => {
+      el.addEventListener("click", () => {
+        layoutOptionElements.forEach((e) => e.classList.remove("selected"));
+        el.classList.add("selected");
+        currentLayout = el.dataset.layout;
+
+        // 이미 4장이 촬영되어 있다면, 레이아웃만 바꿔서 재합성
+        if (capturedCount >= 4) {
+          composeFourCut();
+        }
+      });
+    });
 
     // --- 이벤트 바인딩 ---
     startSequenceBtn.addEventListener("click", runFourCutSequence);
