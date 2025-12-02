@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>키오스크 카메라 테스트</title>
+  <style>
+    body { background:#111; color:#fff; font-family:sans-serif; text-align:center; }
+    video { margin-top:20px; max-width:90vw; border:2px solid #fff; }
+    button { margin-top:16px; padding:10px 20px; font-size:16px; }
+  </style>
+</head>
+<body>
+  <h1>키오스크 카메라 테스트</h1>
+  <video id="video" autoplay playsinline></video>
+  <br />
+  <button id="startBtn">카메라 켜기</button>
+
+  <script>
+    const video = document.getElementById("video");
+    const startBtn = document.getElementById("startBtn");
+
+    startBtn.addEventListener("click", async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+      } catch (err) {
+        console.error(err);
+        alert("카메라 접근 실패: " + err.message);
+      }
+    });
+  </script>
+</body>
+</html>
