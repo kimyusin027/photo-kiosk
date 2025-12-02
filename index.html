@@ -244,7 +244,7 @@
     }
     .final-preview {
       width: 100%;
-      max-height: 400px;
+      max-height: 360px;
       object-fit: contain;
       border-radius: 12px;
       background: #050505;
@@ -284,12 +284,40 @@
       transform: none;
     }
 
+    /* QR 코드 영역 */
+    .qr-wrapper {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px dashed #374151;
+      background: #020617;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .qr-label {
+      font-size: 12px;
+      color: #9ca3af;
+      text-align: center;
+    }
+    #qrcode {
+      width: 160px;
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     @media (max-width: 900px) {
       .container {
         grid-template-columns: 1fr;
       }
     }
   </style>
+
+  <!-- QR 코드 라이브러리 (CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
   <!-- 상단 바 -->
@@ -345,7 +373,7 @@
         </div>
       </div>
 
-      <!-- 오른쪽: 4컷 썸네일 & 최종 결과 -->
+      <!-- 오른쪽: 4컷 썸네일 & 최종 결과 + QR 코드 -->
       <div class="panel side">
         <div>
           <h1>촬영 중인 4컷</h1>
@@ -371,12 +399,23 @@
         </div>
 
         <div class="final-preview-wrapper">
-          <div class="final-preview-label">최종 4컷 결과</div>
+          <div class="final-preview-label">최종 4컷 결과 (하단에 동양미래대학교 마스코트 포함)</div>
           <img id="finalImage" class="final-preview" alt="4컷 결과 미리보기 (촬영 후 표시됨)" />
           <div class="download-row">
             <a id="downloadLink" class="download-link" href="#" download="photo4cut.png" aria-disabled="true">
               ⬇ 4컷 PNG 다운로드
             </a>
+          </div>
+
+          <!-- QR 코드 다운로드 영역 -->
+          <div class="qr-wrapper">
+            <div class="qr-label">
+              QR 코드를 휴대폰으로 스캔하면 4컷 이미지를 바로 열 수 있습니다.<br />
+              (브라우저에서 길게 눌러 "이미지 저장"을 선택하세요.)
+            </div>
+            <div id="qrcode">
+              <!-- QR 코드가 촬영 후 자동 생성됨 -->
+            </div>
           </div>
         </div>
       </div>
@@ -407,6 +446,14 @@
 
     const layoutOptionElements = document.querySelectorAll(".layout-option");
     let currentLayout = "vertical"; // vertical | horizontal | square
+
+    const qrcodeContainer = document.getElementById("qrcode");
+    let qrInstance = null;
+    let lastDataUrl = null;
+
+    // 마스코트 이미지 (index.html과 같은 경로에 mascot.png 필요)
+    const mascotImg = new Image();
+    mascotImg.src = "mascot.png";
 
     let mediaStream = null;
     let capturedCount = 0;
@@ -451,7 +498,20 @@
       capturedCount = Math.max(capturedCount, index + 1);
     }
 
-    // --- 4컷 합성 & 흑백 필터 적용 ---
+    // --- QR 코드 생성/업데이트 ---
+    function updateQRCode(dataUrl) {
+      lastDataUrl = dataUrl;
+      qrcodeContainer.innerHTML = "";
+
+      // dataURL 자체를 QR 텍스트로 사용 (길지만 데모용으로는 충분히 동작)
+      qrInstance = new QRCode(qrcodeContainer, {
+        text: dataUrl,
+        width: 160,
+        height: 160,
+      });
+    }
+
+    // --- 4컷 합성 & 마스코트 + 흑백 필터 적용 ---
     function composeFourCut() {
       if (capturedCount < 4) {
         statusEl.textContent = "4장이 모두 촬영되지 않았습니다.";
@@ -504,6 +564,10 @@
         photoH = srcH * scale;
         frameHeight = outer * 2 + rows * photoH + inner * (rows - 1);
       }
+
+      // 마스코트 들어갈 공간 조금 추가
+      const mascotSpace = 120;
+      frameHeight += mascotSpace;
 
       compositeCanvas.width = frameWidth;
       compositeCanvas.height = frameHeight;
@@ -558,7 +622,19 @@
         ctx.restore();
       }
 
-      // 흑백 필터 옵션 적용
+      // 🔹 마스코트 그리기 (하단 중앙)
+      if (mascotImg.complete && mascotImg.naturalWidth > 0) {
+        const targetWidth = frameWidth * 0.25; // 전체 폭의 25%
+        const scale = targetWidth / mascotImg.naturalWidth;
+        const mW = mascotImg.naturalWidth * scale;
+        const mH = mascotImg.naturalHeight * scale;
+        const mx = (frameWidth - mW) / 2;
+        const my = frameHeight - mH - outer * 0.5; // 아래에서 살짝 위로
+
+        ctx.drawImage(mascotImg, mx, my, mW, mH);
+      }
+
+      // 흑백 필터 옵션 적용 (사진+마스코트 전체에 적용)
       if (grayscaleCheckbox.checked) {
         const imageData = ctx.getImageData(0, 0, compositeCanvas.width, compositeCanvas.height);
         const data = imageData.data;
@@ -577,7 +653,13 @@
       downloadLink.href = dataUrl;
       downloadLink.setAttribute("aria-disabled", "false");
 
-      statusEl.textContent = `4컷 합성이 완료되었습니다. (${layout === "vertical" ? "세로 4컷" : layout === "horizontal" ? "가로 4컷" : "정사각형 2×2"}) PNG 다운로드 버튼을 눌러 저장하세요.`;
+      // QR 코드 생성/업데이트
+      updateQRCode(dataUrl);
+
+      statusEl.textContent =
+        `4컷 합성이 완료되었습니다. ` +
+        `(${layout === "vertical" ? "세로 4컷" : layout === "horizontal" ? "가로 4컷" : "정사각형 2×2"}) ` +
+        `PNG 다운로드 또는 QR 코드로 저장할 수 있습니다.`;
     }
 
     // --- 3→2→1 카운트다운 + 촬영 시퀀스 ---
@@ -592,6 +674,7 @@
       capturedCount = 0;
       downloadLink.setAttribute("aria-disabled", "true");
       finalImageEl.src = "";
+      qrcodeContainer.innerHTML = "";
       statusEl.textContent = "4컷 촬영을 시작합니다. 카메라를 바라봐 주세요!";
       startSequenceBtn.disabled = true;
 
@@ -630,6 +713,8 @@
       finalImageEl.src = "";
       downloadLink.href = "#";
       downloadLink.setAttribute("aria-disabled", "true");
+      qrcodeContainer.innerHTML = "";
+      lastDataUrl = null;
     }
 
     // --- 레이아웃 선택 핸들러 ---
@@ -662,3 +747,4 @@
   </script>
 </body>
 </html>
+
